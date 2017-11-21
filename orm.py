@@ -52,6 +52,7 @@ def select(sql, args, size=None):
 @asyncio.coroutine
 def execute(sql, args):
     log(sql)
+    global __pool
     with (yield from __pool) as conn:
         try:
             cur = yield from conn.cursor()
@@ -71,7 +72,7 @@ def create_args_string(num):
 
 
 class Field(object):
-    def __init__(self, name, column_type, primary_key, default):
+    def __init__(self, name: object, column_type: object, primary_key: object, default: object) -> object:
         self.name = name
         self.column_type = column_type
         self.primary_key = primary_key
@@ -228,7 +229,7 @@ class Model(dict, metaclass=ModelMetaclass):
     @asyncio.coroutine
     def save(self):
         args = list(map(self.getValue, self.__fields__))
-        args.append(self.getValue(self.__primary_key))
+        args.append(self.getValue(self.__primary_key__))
         rows = yield from execute(self.__insert__, args)
         if rows != 1:
             logging.warn('failed to insert record: affected rows: %s' % rows)
