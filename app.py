@@ -12,9 +12,9 @@ from datetime import datetime
 
 from aiohttp import web
 from jinja2 import Environment, FileSystemLoader
-
 import orm
 from coroweb import add_routes, add_static
+import handlers
 
 def init_jinja2(app, **kw):
     logging.info('init jinja2...')
@@ -35,7 +35,7 @@ def init_jinja2(app, **kw):
     if filters is not None:
         for name, f in filters.items():
             env.filters[name] = f
-    app['__templating__'] = env
+    app['__template__'] = env
 
 async def logger_factory(app, handler):
     async def logger(request):
@@ -79,7 +79,7 @@ async def response_factory(app, handler):
                 resp.content_type = 'application/json;charset=utf-8'
                 return resp
             else:
-                resp = web.Response(body=app['__templating__'].get_template(template).render(**r).encode('utf-8'))
+                resp = web.Response(body=app['__template__'].get_template(template).render(**r).encode('utf-8'))
                 resp.content_type = 'text/html;charset=utf-8'
                 return resp
         if isinstance(r, int) and r >= 100 and r < 600:
@@ -108,7 +108,7 @@ def datetime_filter(t):
     return u'%s年%s月%s日' % (dt.year, dt.month, dt.day)
 
 async def init(loop):
-    await orm.create_pool(loop=loop, host='127.0.0.1', port=3306, user='www', password='www', db='awesome')
+    await orm.create_pool(loop=loop, host='127.0.0.1', port=3306, user='root', password='password', db='mysql')
     app = web.Application(loop=loop, middlewares=[
         logger_factory, response_factory
     ])
